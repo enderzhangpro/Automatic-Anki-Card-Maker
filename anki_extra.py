@@ -104,6 +104,10 @@ class RegenerateExampleSentence(BaseModel):
 
 
 def generate_card(vocab_word, banner=None):
+
+    if banner is not None:
+        print(banner)
+
     response = chat(
         model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
         messages=[
@@ -127,13 +131,10 @@ def generate_card(vocab_word, banner=None):
     data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
 
-    LIGHT_BLUE = "\033[94m"
-    RESET = "\033[0m"
-
-# print(json.dumps(data, indent=2, ensure_ascii=False))
+    # print(json.dumps(data, indent=2, ensure_ascii=False))
 
     while True:
-        print(f"Deck: {IDIOM_DECK if data['is_chengyu'] else WORD_DECK}")
+        print(f"Deck: { IDIOM_DECK if data['is_chengyu'] else WORD_DECK}")
         print(f"Word: {vocab_word}")
         print(f"Meaning: {data["meaning_english"]}")
         print(f"Part of Speech: {data["part_of_speech_english"]}")
