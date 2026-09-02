@@ -32,6 +32,12 @@ ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 WORD_DECK = "Extra"
 IDIOM_DECK = "Idioms & Set Phrases"
 NOTE_TYPE = "HSK+ (extra)"
+CYAN = '\033[36m'
+RED = '\033[31m'
+BOLD = '\033[1m'
+RESET = '\033[0m'
+PRINT_WORD_DECK = f"{BOLD}{CYAN}{WORD_DECK}{RESET}"
+PRINT_IDIOM_DECK = f"{BOLD}{RED}{IDIOM_DECK}{RESET}"
 
 
 def to_pinyin(text):
@@ -53,6 +59,7 @@ def invoke(action, **params):
 
 def add_to_anki(word, data, model_name=NOTE_TYPE):
     deck_name = IDIOM_DECK if data["is_chengyu"] else WORD_DECK
+    deck_name_color = PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK
     note = {
         "deckName": deck_name,
         "modelName": model_name,
@@ -84,9 +91,9 @@ def add_to_anki(word, data, model_name=NOTE_TYPE):
         print("Error: Anki is closed.")
         sys.exit(0)
     except RuntimeError:
-        print(f'"{word}" already exists in {deck_name} — skipped.')
+        print(f'"{word}" already exists in {deck_name_color} — skipped.')
         return
-    print(f"Added '{word}' as note {note_id} to {deck_name}.")
+    print(f"Added '{word}' as note {note_id} to {deck_name_color}.")
     return note_id
 
 
@@ -131,13 +138,13 @@ def generate_card(vocab_word):
     # print(json.dumps(data, indent=2, ensure_ascii=False))
 
     while True:
-        print(f"Deck: { IDIOM_DECK if data['is_chengyu'] else WORD_DECK}")
+        print(f"Deck: { PRINT_IDIOM_DECK if data['is_chengyu'] else PRINT_WORD_DECK}")
         print(f"Word: {vocab_word}")
         print(f"Meaning: {data["meaning_english"]}")
         print(f"Part of Speech: {data["part_of_speech_english"]}")
         print(f"Example Sentence: {data["sentencesimplified"]}")
         print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
-        menu = f"\n0. Cancel\n1. Add to {IDIOM_DECK if data["is_chengyu"] else WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
+        menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
         print(menu)
         user_input = input("> ").strip()
         if user_input == "0":
