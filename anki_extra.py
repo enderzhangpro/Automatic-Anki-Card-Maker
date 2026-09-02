@@ -103,10 +103,7 @@ class RegenerateExampleSentence(BaseModel):
     sentencemeaning_english: str = Field(description="The English translation of the example sentence")
 
 
-def generate_card(vocab_word, banner=None):
-
-    if banner is not None:
-        print(banner)
+def generate_card(vocab_word):
 
     response = chat(
         model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
@@ -214,11 +211,11 @@ if __name__ == "__main__":
                 print("Anki executable not found at the specified path.")
                 sys.exit(1)
         for i in range(1, len(sys.argv)):
+            if len(sys.argv) > 2:
+                print(f"====={i} of {len(sys.argv) - 1}=====")
             if is_chinese(sys.argv[i]):
-                generate_card(sys.argv[i], banner=f"====={i} of {len(sys.argv) - 1}=====" if len(sys.argv) > 2 else None)
+                generate_card(sys.argv[i])
             else:
-                if len(sys.argv) > 2:
-                    print(f"====={i} of {len(sys.argv) - 1}=====")
                 print(f'"{sys.argv[i]}" is not Mandarin Chinese. Skipping...')
     else:
         print("Which word do you want to add into Anki?")
