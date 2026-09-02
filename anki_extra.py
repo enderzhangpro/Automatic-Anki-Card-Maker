@@ -33,11 +33,22 @@ WORD_DECK = "Extra"
 IDIOM_DECK = "Idioms & Set Phrases"
 NOTE_TYPE = "HSK+ (extra)"
 CYAN = '\033[36m'
+# GREEN = '\033[32m'
+# YELLOW = '\033[33m'
+# MAGENTA = '\033[35m'
+# BRIGHT_RED = '\033[91m'
 RED = '\033[31m'
 BOLD = '\033[1m'
 RESET = '\033[0m'
 PRINT_WORD_DECK = f"{BOLD}{CYAN}{WORD_DECK}{RESET}"
 PRINT_IDIOM_DECK = f"{BOLD}{RED}{IDIOM_DECK}{RESET}"
+
+"""print(f"{BOLD}{CYAN}{WORD_DECK}{RESET}")
+print(f"{BOLD}{GREEN}{WORD_DECK}{RESET}")
+print(f"{BOLD}{YELLOW}{WORD_DECK}{RESET}")
+print(f"{BOLD}{MAGENTA}{WORD_DECK}{RESET}")
+print(f"{BOLD}{BRIGHT_RED}{WORD_DECK}{RESET}")
+print(f"{BOLD}{RED}{WORD_DECK}{RESET}")"""
 
 
 def to_pinyin(text):
