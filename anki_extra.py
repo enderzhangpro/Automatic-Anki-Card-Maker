@@ -31,7 +31,8 @@ def wait_for_anki(timeout=30, interval=0.5):
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 WORD_DECK = "Extra"
 IDIOM_DECK = "Idioms & Set Phrases"
-NOTE_TYPE = "HSK+ (extra)"
+WORD_NOTE_TYPE = "HSK+ (extra)"
+IDIOM_NOTE_TYPE = "HSK+ Idioms"
 CYAN = '\033[36m'
 # GREEN = '\033[32m'
 # YELLOW = '\033[33m'
@@ -68,9 +69,13 @@ def invoke(action, **params):
     return result["result"]
 
 
-def add_to_anki(word, data, model_name=NOTE_TYPE):
+def add_to_anki(word, data):
     deck_name = IDIOM_DECK if data["is_chengyu"] else WORD_DECK
     deck_name_color = PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK
+    if data["is_chengyu"]:
+        model_name = IDIOM_NOTE_TYPE
+    else:
+        model_name = WORD_NOTE_TYPE
     note = {
         "deckName": deck_name,
         "modelName": model_name,
@@ -148,15 +153,20 @@ def generate_card(vocab_word):
 
     # print(json.dumps(data, indent=2, ensure_ascii=False))
 
+    display_menu = True
+
     while True:
-        print(f"Deck: { PRINT_IDIOM_DECK if data['is_chengyu'] else PRINT_WORD_DECK}")
-        print(f"Word: {vocab_word}")
-        print(f"Meaning: {data["meaning_english"]}")
-        print(f"Part of Speech: {data["part_of_speech_english"]}")
-        print(f"Example Sentence: {data["sentencesimplified"]}")
-        print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
-        menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
-        print(menu)
+        if display_menu:
+            print(f"Deck: { PRINT_IDIOM_DECK if data['is_chengyu'] else PRINT_WORD_DECK}")
+            print(f"Word: {vocab_word}")
+            print(f"Meaning: {data["meaning_english"]}")
+            print(f"Part of Speech: {data["part_of_speech_english"]}")
+            print(f"Example Sentence: {data["sentencesimplified"]}")
+            print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
+            menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
+            print(menu)
+        else:
+            display_menu = True
         user_input = input("> ").strip()
         if user_input == "0":
             return
@@ -212,6 +222,9 @@ def generate_card(vocab_word):
                     think=False,  # turn off extended reasoning
                 )
                 data["sentencemeaning_english"] = response.message.content
+        else:
+            print(f"'{user_input}' is not a valid command. Please look at the menu for help.")
+            display_menu = False
 
 
 if __name__ == "__main__":
