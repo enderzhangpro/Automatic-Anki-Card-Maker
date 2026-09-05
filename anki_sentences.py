@@ -5,6 +5,7 @@ from ollama import chat
 from pydantic import BaseModel, Field
 import os
 from pypinyin import pinyin
+from pypinyin_dict.phrase_pinyin_data import large_pinyin
 import re
 import requests
 import subprocess
@@ -32,6 +33,9 @@ def wait_for_anki(timeout=30, interval=0.5):
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 SENTENCE_DECK = "Substitution Drills"
 NOTE_TYPE = "Chinese Cloze Sentence+"
+
+
+large_pinyin.load()
 
 
 def to_pinyin(text):

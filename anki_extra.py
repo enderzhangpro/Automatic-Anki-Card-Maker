@@ -5,6 +5,7 @@ from ollama import chat
 from pydantic import BaseModel, Field
 import os
 from pypinyin import pinyin
+from pypinyin_dict.phrase_pinyin_data import large_pinyin
 import requests
 import subprocess
 import sys
@@ -51,6 +52,10 @@ print(f"{BOLD}{YELLOW}{WORD_DECK}{RESET}")
 print(f"{BOLD}{MAGENTA}{WORD_DECK}{RESET}")
 print(f"{BOLD}{BRIGHT_RED}{WORD_DECK}{RESET}")
 print(f"{BOLD}{RED}{WORD_DECK}{RESET}")"""
+
+
+# to correct issues with the pinyin being generated incorrectly
+large_pinyin.load()
 
 
 def to_pinyin(text):
