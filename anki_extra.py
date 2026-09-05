@@ -31,7 +31,8 @@ def wait_for_anki(timeout=30, interval=0.5):
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 WORD_DECK = "Extra"
 IDIOM_DECK = "Idioms & Set Phrases"
-WORD_NOTE_TYPE = "HSK+ (extra)"
+# WORD_NOTE_TYPE = "HSK+ (extra)"
+WORD_NOTE_TYPE = "HSK+ Idioms"
 IDIOM_NOTE_TYPE = "HSK+ Idioms"
 CYAN = '\033[36m'
 # GREEN = '\033[32m'
