@@ -233,7 +233,7 @@ def generate_card(vocab_word):
                     think=False,  # turn off extended reasoning
                 )
                 data["sentencemeaning_english"] = response.message.content
-        elif user_input == "7":
+        elif user_input == "7" or user_input == "notes":
             data["notes"] = input("Type in notes: ")
         elif user_input == "8" or user_input == "pinyin":
             print(f"Pinyin: {to_pinyin(vocab_word)}")
