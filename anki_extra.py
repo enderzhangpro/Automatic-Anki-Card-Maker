@@ -104,6 +104,7 @@ def add_to_anki(word, data):
             "SentenceMeaning": data["sentencemeaning_english"],
             "SentenceAudio": "",
             "SentenceImage": "",
+            "Notes": data["notes"],
         },
         "options": {"allowDuplicate": False, "duplicateScope": "deck"},
     }
@@ -156,6 +157,7 @@ def generate_card(vocab_word):
     data = json.loads(raw_content)
     data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
+    data["notes"] = ""
 
     # print(json.dumps(data, indent=2, ensure_ascii=False))
 
@@ -169,13 +171,15 @@ def generate_card(vocab_word):
             print(f"Part of Speech: {data["part_of_speech_english"]}")
             print(f"Example Sentence: {data["sentencesimplified"]}")
             print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
-            menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
-            print(menu)
+            if data["notes"] != "":
+                print(f"Notes: {data["notes"]}")
+            # menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
+            # menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Regenerate example sentence\n5. Type in example sentence manually\n6. Type in notes"
+            print(f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n(Type m for full menu)")
         else:
             display_menu = True
         user_input = input("> ").strip().lower()
         if user_input == "0" or user_input == "exit":
-            print("Exiting...")
             return
         elif user_input == "1":
             add_to_anki(vocab_word, data)
@@ -229,9 +233,20 @@ def generate_card(vocab_word):
                     think=False,  # turn off extended reasoning
                 )
                 data["sentencemeaning_english"] = response.message.content
-        elif user_input == "7" or user_input == "pinyin":
+        elif user_input == "7":
+            data["notes"] = input("Type in notes: ")
+        elif user_input == "8" or user_input == "pinyin":
             print(f"Pinyin: {to_pinyin(vocab_word)}")
-            print(f"SentencePinyin: {data["sentencepinyin"]}")
+            print(f"Sentence pinyin: {data["sentencepinyin"]}")
+            display_menu = False
+        elif user_input == "m" or user_input == "menu":
+            print(
+                f"""3. Edit English meaning
+4. Edit part of speech
+5. Regenerate example sentence
+6. Type in example sentence manually
+7. Type in notes
+8. Show pinyin""")
             display_menu = False
         else:
             print(f"'{user_input}' is not a valid command. Please look at the menu for help.")
