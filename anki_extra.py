@@ -175,7 +175,11 @@ def generate_card(vocab_word):
                 print(f"Notes: {data["notes"]}")
             # menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
             # menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Regenerate example sentence\n5. Type in example sentence manually\n6. Type in notes"
-            print(f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n(Type m for full menu)")
+            print(f"""0. Cancel
+1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}
+2. Switch Deck
+3. Edit English meaning
+(Type 'm' for full menu)""")
         else:
             display_menu = True
         user_input = input("> ").strip().lower()
@@ -214,7 +218,8 @@ def generate_card(vocab_word):
         elif user_input == "6":
             data["sentencesimplified"] = input("Type in new example sentence: ")
             data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
-            data["sentencemeaning_english"] = input("Type in the English translation (or /s for machine translation): ")
+            print("(Note: you can type /s for a machine translation)")
+            data["sentencemeaning_english"] = input("Type in the English translation: ")
             if data["sentencemeaning_english"].strip().lower() == "/s":
                 response = chat(
                     model='qwen3.5:4b',
@@ -241,8 +246,7 @@ def generate_card(vocab_word):
             display_menu = False
         elif user_input == "m" or user_input == "menu":
             print(
-                f"""3. Edit English meaning
-4. Edit part of speech
+                f"""4. Edit part of speech
 5. Regenerate example sentence
 6. Type in example sentence manually
 7. Type in notes
