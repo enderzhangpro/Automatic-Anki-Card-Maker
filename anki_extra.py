@@ -183,7 +183,7 @@ def generate_card(vocab_word):
         else:
             display_menu = True
         user_input = input("> ").strip().lower()
-        if user_input == "0" or user_input == "exit"  or user_input == "cancel":
+        if user_input == "0" or user_input == "exit" or user_input == "cancel":
             return
         elif user_input == "1":
             add_to_anki(vocab_word, data)
@@ -241,12 +241,13 @@ def generate_card(vocab_word):
         elif user_input == "7" or user_input == "notes" or user_input == "note":
             data["notes"] = input("Type in notes: ")
         elif user_input == "8" or user_input == "pinyin":
-            print(f"Pinyin: {to_pinyin(vocab_word)}")
-            print(f"Sentence pinyin: {data["sentencepinyin"]}")
+            print(f"Word: {vocab_word}")
+            print(f"{to_pinyin(vocab_word)}")
+            print(f"Example Sentence: {data["sentencesimplified"]}")
+            print(f"{data["sentencepinyin"]}")
             display_menu = False
         elif user_input == "m" or user_input == "menu":
-            print(
-                f"""4. Edit part of speech
+            print(f"""4. Edit part of speech
 5. Regenerate example sentence
 6. Type in example sentence manually
 7. Type in notes
