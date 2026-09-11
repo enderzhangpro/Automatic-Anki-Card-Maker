@@ -183,7 +183,7 @@ def generate_card(vocab_word):
         else:
             display_menu = True
         user_input = input("> ").strip().lower()
-        if user_input == "0" or user_input == "exit":
+        if user_input == "0" or user_input == "exit"  or user_input == "cancel":
             return
         elif user_input == "1":
             add_to_anki(vocab_word, data)
@@ -238,7 +238,7 @@ def generate_card(vocab_word):
                     think=False,  # turn off extended reasoning
                 )
                 data["sentencemeaning_english"] = response.message.content
-        elif user_input == "7" or user_input == "notes":
+        elif user_input == "7" or user_input == "notes" or user_input == "note":
             data["notes"] = input("Type in notes: ")
         elif user_input == "8" or user_input == "pinyin":
             print(f"Pinyin: {to_pinyin(vocab_word)}")
