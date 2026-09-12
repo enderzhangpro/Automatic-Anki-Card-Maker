@@ -2,8 +2,9 @@
 
 import json
 from ollama import chat
-from pydantic import BaseModel, Field
 import os
+from pycccedict.cccedict import CcCedict
+from pydantic import BaseModel, Field
 from pypinyin import pinyin
 from pypinyin_dict.phrase_pinyin_data import large_pinyin
 import requests
@@ -119,6 +120,11 @@ def add_to_anki(word, data):
     print(f"Added '{word}' as note {note_id} to {deck_name_color}.")
     return note_id
 
+class ExtraNoteWithoutVocabTranslation(BaseModel):
+    is_chengyu: bool = Field(description="True if this vocabulary word is an idiom or set phrase, false otherwise")
+    part_of_speech_english: str = Field(description="The part(s) of speech of this word in English")
+    sentencesimplified: str = Field(description="An example sentence including the word in simplified Mandarin")
+    sentencemeaning_english: str = Field(description="The English translation of the example sentence")
 
 class ExtraNote(BaseModel):
     is_chengyu: bool = Field(description="True if this vocabulary word is an idiom or set phrase, false otherwise")
@@ -135,26 +141,53 @@ class RegenerateExampleSentence(BaseModel):
 
 def generate_card(vocab_word):
 
-    response = chat(
-        model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
-        messages=[
-            {
-                'role': 'user',
-                'content': f'For the Mandarin word "{vocab_word}", provide: '
-                f'(1) whether this is a chengyu, '
-                f'(2) meaning — written in English, '
-                f'(3) part of speech — written in English, '
-                f'(4) an example sentence in simplified Chinese, '
-                f'(5) the English translation of that example sentence.',
-            },
-        ],
-        # Pass the Pydantic schema into the format argument
-        format=ExtraNote.model_json_schema(),
-        options={'temperature': 0},  # Low temperature ensures strict format adherence
-        think=False,  # turn off extended reasoning
-    )
-    raw_content = response.message.content
-    data = json.loads(raw_content)
+    dictionary_entry = cedict.get_entry(vocab_word)
+    if dictionary_entry is not None:
+        response = chat(
+            model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
+            messages=[
+                {
+                    'role': 'user',
+                    'content': f'For the Mandarin word "{vocab_word}", provide: '
+                    f'(1) whether this is a chengyu, '
+                    f'(2) part of speech — written in English, '
+                    f'(3) an example sentence in simplified Chinese, '
+                    f'(4) the English translation of that example sentence.',
+                },
+            ],
+            # Pass the Pydantic schema into the format argument
+            format=ExtraNoteWithoutVocabTranslation.model_json_schema(),
+            options={'temperature': 0},  # Low temperature ensures strict format adherence
+            think=False,  # turn off extended reasoning
+        )
+        raw_content = response.message.content
+        data = json.loads(raw_content)
+        data["meaning_english"] = ""
+        for i in range(len(dictionary_entry['definitions'])):
+            data["meaning_english"] += dictionary_entry['definitions'][i]
+            if i < len(dictionary_entry['definitions']) - 1:
+                data["meaning_english"] += "; "
+    else:
+        print(f"{RED}Warning: {vocab_word} not found in Chinese-English CC-CEDICT dictionary.{RESET}")
+        response = chat(
+            model='qwen3.5:4b',
+            messages=[
+                {
+                    'role': 'user',
+                    'content': f'For the Mandarin word "{vocab_word}", provide: '
+                    f'(1) whether this is a chengyu, '
+                    f'(2) meaning — written in English, '
+                    f'(3) part of speech — written in English, '
+                    f'(4) an example sentence in simplified Chinese, '
+                    f'(5) the English translation of that example sentence.',
+                },
+            ],
+            format=ExtraNote.model_json_schema(),
+            options={'temperature': 0},
+            think=False,
+        )
+        raw_content = response.message.content
+        data = json.loads(raw_content)
     data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
@@ -286,6 +319,7 @@ if __name__ == "__main__":
             else:
                 print("Anki executable not found at the specified path.")
                 sys.exit(1)
+        cedict = CcCedict()
         for i in range(1, len(sys.argv)):
             if len(sys.argv) > 2:
                 print(f"====={i} of {len(sys.argv) - 1}=====")
