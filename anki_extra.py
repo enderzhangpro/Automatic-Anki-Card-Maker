@@ -100,7 +100,7 @@ def add_to_anki(word, data):
             "SentenceTraditional": "",
             "SentenceSimplifiedCloze": "",
             "SentenceTraditionalCloze": "",
-            "SentencePinyin.1": data["sentencepinyin"],
+            "SentencePinyin.1": to_pinyin(data["sentencesimplified"]),
             "SentencePinyin.2": "",
             "SentenceMeaning": data["sentencemeaning_english"],
             "SentenceAudio": "",
@@ -188,7 +188,6 @@ def generate_card(vocab_word):
         )
         raw_content = response.message.content
         data = json.loads(raw_content)
-    data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
 
@@ -253,7 +252,6 @@ def generate_card(vocab_word):
             )
             new_example = json.loads(response.message.content)
             data["sentencesimplified"] = new_example["sentencesimplified"]
-            data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
             data["sentencemeaning_english"] = new_example["sentencemeaning_english"]
         elif user_input == "6":
             new_sentence = input("Type in new example sentence: ").strip()
@@ -284,14 +282,13 @@ def generate_card(vocab_word):
             else:
                 data["sentencemeaning_english"] = english_translation
             data["sentencesimplified"] = new_sentence
-            data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
         elif user_input == "7" or user_input == "notes" or user_input == "note":
             data["notes"] = replace_except_on_escape(data["notes"], "Type in notes: ")
         elif user_input == "8" or user_input == "pinyin":
             print(f"Word: {vocab_word}")
-            print(f"{to_pinyin(vocab_word)}")
+            print(to_pinyin(vocab_word))
             print(f"Example Sentence: {data["sentencesimplified"]}")
-            print(f"{data["sentencepinyin"]}")
+            print(to_pinyin(data["sentencesimplified"]))
             display_menu = False
         elif user_input == "m" or user_input == "menu":
             print(f"""4. Edit part of speech
