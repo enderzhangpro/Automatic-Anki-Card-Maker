@@ -159,9 +159,16 @@ def generate_card(vocab_word):
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
 
-    # print(json.dumps(data, indent=2, ensure_ascii=False))
-
     display_menu = True
+
+    # the second value is for display_menu
+    def replace_except_on_escape(original_value, prompt):
+        user_input = input(prompt).strip()
+        if user_input.lower() != "/q":
+            return user_input
+        return original_value
+
+    # print(json.dumps(data, indent=2, ensure_ascii=False))
 
     while True:
         if display_menu:
@@ -185,15 +192,15 @@ def generate_card(vocab_word):
         user_input = input("> ").strip().lower()
         if user_input == "0" or user_input == "exit" or user_input == "cancel":
             return
-        elif user_input == "1":
+        elif user_input == "1" or user_input == "add":
             add_to_anki(vocab_word, data)
             return
-        elif user_input == "2":
+        elif user_input == "2" or user_input == "swap" or user_input == "switch":
             data["is_chengyu"] = not data["is_chengyu"]
         elif user_input == "3":
-            data["meaning_english"] = input("Type in new meaning: ")
+            data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
         elif user_input == "4":
-            data["part_of_speech_english"] = input("Type in new part of speech: ")
+            data["part_of_speech_english"] = replace_except_on_escape(data["part_of_speech_english"], "Type in new part of speech: ")
         elif user_input == "5":
             response = chat(
                 model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
@@ -216,11 +223,12 @@ def generate_card(vocab_word):
             data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
             data["sentencemeaning_english"] = new_example["sentencemeaning_english"]
         elif user_input == "6":
-            data["sentencesimplified"] = input("Type in new example sentence: ")
-            data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
-            print("(Note: you can type /s for a machine translation)")
-            data["sentencemeaning_english"] = input("Type in the English translation: ")
-            if data["sentencemeaning_english"].strip().lower() == "/s":
+            new_sentence = input("Type in new example sentence: ").strip()
+            if new_sentence.lower() == "/q":
+                continue
+            print("(Note: you can type /t for a machine translation)")
+            english_translation = input("Type in the English translation: ").strip()
+            if english_translation.lower() == "/t":
                 response = chat(
                     model='qwen3.5:4b',
                     messages=[
@@ -230,7 +238,7 @@ def generate_card(vocab_word):
                         },
                         {
                             'role': 'user',
-                            'content': data["sentencesimplified"],
+                            'content': new_sentence,
 
                         },
                     ],
@@ -238,8 +246,14 @@ def generate_card(vocab_word):
                     think=False,  # turn off extended reasoning
                 )
                 data["sentencemeaning_english"] = response.message.content
+            elif english_translation.lower() == "/q":
+                continue
+            else:
+                data["sentencemeaning_english"] = english_translation
+            data["sentencesimplified"] = new_sentence
+            data["sentencepinyin"] = to_pinyin(data["sentencesimplified"])
         elif user_input == "7" or user_input == "notes" or user_input == "note":
-            data["notes"] = input("Type in notes: ")
+            data["notes"] = replace_except_on_escape(data["notes"], "Type in notes: ")
         elif user_input == "8" or user_input == "pinyin":
             print(f"Word: {vocab_word}")
             print(f"{to_pinyin(vocab_word)}")
