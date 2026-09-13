@@ -168,7 +168,7 @@ def generate_card(vocab_word):
             if i < len(dictionary_entry['definitions']) - 1:
                 data["meaning_english"] += "; "
     else:
-        print(f"{RED}Warning: {vocab_word} not found in Chinese-English CC-CEDICT dictionary.{RESET}")
+        print(f"{RED}Warning: '{vocab_word}' not found in Chinese-English CC-CEDICT dictionary. Reverting to LLM definition...{RESET}")
         response = chat(
             model='qwen3.5:4b',
             messages=[
@@ -193,7 +193,6 @@ def generate_card(vocab_word):
 
     display_menu = True
 
-    # the second value is for display_menu
     def replace_except_on_escape(original_value, prompt):
         user_input = input(prompt).strip()
         if user_input.lower() != "/q":
@@ -253,7 +252,7 @@ def generate_card(vocab_word):
             new_example = json.loads(response.message.content)
             data["sentencesimplified"] = new_example["sentencesimplified"]
             data["sentencemeaning_english"] = new_example["sentencemeaning_english"]
-        elif user_input == "6":
+        elif user_input == "6" or user_input == "generate" or user_input == "regenerate" or user_input == "gen" or user_input == "regen":
             new_sentence = input("Type in new example sentence: ").strip()
             if new_sentence.lower() == "/q":
                 continue
@@ -292,7 +291,7 @@ def generate_card(vocab_word):
             display_menu = False
         elif user_input == "m" or user_input == "menu":
             print(f"""4. Edit part of speech
-5. Regenerate example sentence
+5. Generate new example sentence
 6. Type in example sentence manually
 7. Type in notes
 8. Show pinyin""")
