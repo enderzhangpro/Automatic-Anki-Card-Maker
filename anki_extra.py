@@ -163,9 +163,11 @@ def generate_card(vocab_word):
         raw_content = response.message.content
         data = json.loads(raw_content)
         data["meaning_english"] = ""
-        for i in range(len(dictionary_entry['definitions'])):
-            data["meaning_english"] += dictionary_entry['definitions'][i]
-            if i < len(dictionary_entry['definitions']) - 1:
+        # to get rid of the annoying measure word entries
+        cleared_definitions = [d for d in dictionary_entry['definitions'] if not d.startswith("CL:")]
+        for i in range(len(cleared_definitions)):
+            data["meaning_english"] += cleared_definitions[i]
+            if i < len(cleared_definitions) - 1:
                 data["meaning_english"] += "; "
     else:
         print(f"{RED}Warning: '{vocab_word}' not found in Chinese-English CC-CEDICT dictionary. Reverting to LLM definition...{RESET}")
