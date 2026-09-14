@@ -105,7 +105,6 @@ def add_to_anki(word, data):
             "SentenceAudio": "",
             "SentenceImage": "",
             "Notes": data["notes"],
-            "Literary Explanation": data["is_literary_explanation"] if data["is_literary"] == data["is_literary_explanation"] else ""
         },
         "options": {"allowDuplicate": False, "duplicateScope": "deck"},
         "tags": ["recognition"] if data["is_literary"] else [],
@@ -216,7 +215,7 @@ def generate_card(vocab_word):
     while True:
         if display_menu:
             print(f"Deck: {PRINT_IDIOM_DECK if data['is_chengyu'] else PRINT_WORD_DECK}")
-            if data["is_literary"]:
+            if data["is_literary"] and not data['is_chengyu']:
                 print(f"Word: {BOLD}{GREEN}{vocab_word} (literary){RESET}")
             else:
                 print(f"Word: {vocab_word}")
