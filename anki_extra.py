@@ -31,20 +31,20 @@ def wait_for_anki(timeout=30, interval=0.5):
 
 
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
+literary_or_spoken = ""
 WORD_DECK = "Extra"
 IDIOM_DECK = "Idioms & Set Phrases"
-# WORD_NOTE_TYPE = "HSK+ (extra)"
-WORD_NOTE_TYPE = "HSK+ Idioms"
-IDIOM_NOTE_TYPE = "HSK+ Idioms"
+CHINESE_TO_ENGLISH = "HSK+ (extra)"
+ENGLISH_TO_CHINESE = "HSK+ Idioms"
 CYAN = '\033[36m'
-# GREEN = '\033[32m'
+GREEN = '\033[32m'
 # YELLOW = '\033[33m'
 # MAGENTA = '\033[35m'
 # BRIGHT_RED = '\033[91m'
 RED = '\033[31m'
 BOLD = '\033[1m'
 RESET = '\033[0m'
-PRINT_WORD_DECK = f"{BOLD}{CYAN}{WORD_DECK}{RESET}"
+PRINT_WORD_DECK = f"{BOLD}{CYAN}{WORD_DECK + literary_or_spoken}{RESET}"
 PRINT_IDIOM_DECK = f"{BOLD}{RED}{IDIOM_DECK}{RESET}"
 
 """print(f"{BOLD}{CYAN}{WORD_DECK}{RESET}")
@@ -77,14 +77,13 @@ def invoke(action, **params):
 
 
 def add_to_anki(word, data):
-    deck_name = IDIOM_DECK if data["is_chengyu"] else WORD_DECK
     deck_name_color = PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK
-    if data["is_chengyu"]:
-        model_name = IDIOM_NOTE_TYPE
+    if data["is_literary"] and not data["is_chengyu"]:
+        model_name = CHINESE_TO_ENGLISH
     else:
-        model_name = WORD_NOTE_TYPE
+        model_name = ENGLISH_TO_CHINESE
     note = {
-        "deckName": deck_name,
+        "deckName": IDIOM_DECK if data["is_chengyu"] else WORD_DECK,
         "modelName": model_name,
         "fields": {
             "Simplified": word,
@@ -106,8 +105,10 @@ def add_to_anki(word, data):
             "SentenceAudio": "",
             "SentenceImage": "",
             "Notes": data["notes"],
+            "Literary Explanation": data["is_literary_explanation"] if data["is_literary"] == data["is_literary_explanation"] else ""
         },
         "options": {"allowDuplicate": False, "duplicateScope": "deck"},
+        "tags": ["recognition"] if data["is_literary"] else [],
     }
     try:
         note_id = invoke("addNote", note=note)
@@ -120,14 +121,18 @@ def add_to_anki(word, data):
     print(f"Added '{word}' as note {note_id} to {deck_name_color}.")
     return note_id
 
+
 class ExtraNoteWithoutVocabTranslation(BaseModel):
-    is_chengyu: bool = Field(description="True if this vocabulary word is an idiom or set phrase, false otherwise")
+    is_chengyu: bool = Field(description="True if this vocabulary word is an idiom or four character phrase, false otherwise")
+    is_literary: bool = Field(description="True if this word is primarily encountered in written Chinese (news, literature, formal writing) and would rarely be spoken aloud in everyday conversation, false if it is common in everyday spoken Mandarin")
     part_of_speech_english: str = Field(description="The part(s) of speech of this word in English")
     sentencesimplified: str = Field(description="An example sentence including the word in simplified Mandarin")
     sentencemeaning_english: str = Field(description="The English translation of the example sentence")
 
+
 class ExtraNote(BaseModel):
-    is_chengyu: bool = Field(description="True if this vocabulary word is an idiom or set phrase, false otherwise")
+    is_chengyu: bool = Field(description="True if this vocabulary word is an idiom or four character phrase, false otherwise")
+    is_literary: bool = Field(description="True if this word is primarily encountered in written Chinese (news, literature, formal writing) and would rarely be spoken aloud in everyday conversation, false if it is common in everyday spoken Mandarin")
     meaning_english: str = Field(description="The meaning of the Mandarin vocabulary word in English")
     part_of_speech_english: str = Field(description="The part(s) of speech of this word in English")
     sentencesimplified: str = Field(description="An example sentence including the word in simplified Mandarin")
@@ -150,9 +155,11 @@ def generate_card(vocab_word):
                     'role': 'user',
                     'content': f'For the Mandarin word "{vocab_word}", provide: '
                     f'(1) whether this is a chengyu, '
-                    f'(2) part of speech — written in English, '
-                    f'(3) an example sentence in simplified Chinese, '
-                    f'(4) the English translation of that example sentence.',
+                    f'(2) whether this word is primarily encountered in written/literary Chinese rather than spoken aloud in everyday conversation, '
+                    f'(3) why this word should be classified as literary or spoken'
+                    f'(4) part of speech — written in English, '
+                    f'(5) an example sentence in simplified Chinese, '
+                    f'(6) the English translation of that example sentence.',
                 },
             ],
             # Pass the Pydantic schema into the format argument
@@ -178,10 +185,12 @@ def generate_card(vocab_word):
                     'role': 'user',
                     'content': f'For the Mandarin word "{vocab_word}", provide: '
                     f'(1) whether this is a chengyu, '
-                    f'(2) meaning — written in English, '
-                    f'(3) part of speech — written in English, '
-                    f'(4) an example sentence in simplified Chinese, '
-                    f'(5) the English translation of that example sentence.',
+                    f'(2) whether this word is primarily encountered in written/literary Chinese rather than spoken aloud in everyday conversation, '
+                    f'(3) why this word should be classified as literary or spoken'
+                    f'(4) meaning — written in English, '
+                    f'(5) part of speech — written in English, '
+                    f'(6) an example sentence in simplified Chinese, '
+                    f'(7) the English translation of that example sentence.',
                 },
             ],
             format=ExtraNote.model_json_schema(),
@@ -192,6 +201,7 @@ def generate_card(vocab_word):
         data = json.loads(raw_content)
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
+    data["original_is_literary"] = data["is_literary"]
 
     display_menu = True
 
@@ -205,8 +215,11 @@ def generate_card(vocab_word):
 
     while True:
         if display_menu:
-            print(f"Deck: { PRINT_IDIOM_DECK if data['is_chengyu'] else PRINT_WORD_DECK}")
-            print(f"Word: {vocab_word}")
+            print(f"Deck: {PRINT_IDIOM_DECK if data['is_chengyu'] else PRINT_WORD_DECK}")
+            if data["is_literary"]:
+                print(f"Word: {BOLD}{GREEN}{vocab_word} (literary){RESET}")
+            else:
+                print(f"Word: {vocab_word}")
             print(f"Meaning: {data["meaning_english"]}")
             print(f"Part of Speech: {data["part_of_speech_english"]}")
             print(f"Example Sentence: {data["sentencesimplified"]}")
@@ -218,7 +231,7 @@ def generate_card(vocab_word):
             print(f"""0. Cancel
 1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}
 2. Switch Deck
-3. Edit English meaning
+3. Literary
 (Type 'm' for full menu)""")
         else:
             display_menu = True
@@ -230,11 +243,13 @@ def generate_card(vocab_word):
             return
         elif user_input == "2" or user_input == "swap" or user_input == "switch":
             data["is_chengyu"] = not data["is_chengyu"]
-        elif user_input == "3":
-            data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
+        elif user_input == "3" or user_input == "literary" or user_input == "informal":
+            data["is_literary"] = not data["is_literary"]
         elif user_input == "4":
-            data["part_of_speech_english"] = replace_except_on_escape(data["part_of_speech_english"], "Type in new part of speech: ")
+            data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
         elif user_input == "5":
+            data["part_of_speech_english"] = replace_except_on_escape(data["part_of_speech_english"], "Type in new part of speech: ")
+        elif user_input == "6":
             response = chat(
                 model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
                 messages=[
@@ -254,7 +269,7 @@ def generate_card(vocab_word):
             new_example = json.loads(response.message.content)
             data["sentencesimplified"] = new_example["sentencesimplified"]
             data["sentencemeaning_english"] = new_example["sentencemeaning_english"]
-        elif user_input == "6" or user_input == "generate" or user_input == "regenerate" or user_input == "gen" or user_input == "regen":
+        elif user_input == "7" or user_input == "generate" or user_input == "regenerate" or user_input == "gen" or user_input == "regen":
             new_sentence = input("Type in new example sentence: ").strip()
             if new_sentence.lower() == "/q":
                 continue
@@ -283,20 +298,21 @@ def generate_card(vocab_word):
             else:
                 data["sentencemeaning_english"] = english_translation
             data["sentencesimplified"] = new_sentence
-        elif user_input == "7" or user_input == "notes" or user_input == "note":
+        elif user_input == "8" or user_input == "notes" or user_input == "note":
             data["notes"] = replace_except_on_escape(data["notes"], "Type in notes: ")
-        elif user_input == "8" or user_input == "pinyin":
+        elif user_input == "9" or user_input == "pinyin":
             print(f"Word: {vocab_word}")
             print(to_pinyin(vocab_word))
             print(f"Example Sentence: {data["sentencesimplified"]}")
             print(to_pinyin(data["sentencesimplified"]))
             display_menu = False
         elif user_input == "m" or user_input == "menu":
-            print(f"""4. Edit part of speech
-5. Generate new example sentence
-6. Type in example sentence manually
-7. Type in notes
-8. Show pinyin""")
+            print(f"""4. Edit English meaning
+5. Edit part of speech
+6. Generate new example sentence
+7. Type in example sentence manually
+8. Type in notes
+9. Show pinyin""")
             display_menu = False
         else:
             print(f"'{user_input}' is not a valid command. Please look at the menu for help.")
