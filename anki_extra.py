@@ -256,7 +256,6 @@ def generate_card(vocab_word):
             else:
                 data["is_literary"] = not data["is_literary"]
                 target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
-            target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
         elif user_input == "4":
             data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
         elif user_input == "5":
