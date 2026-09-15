@@ -114,7 +114,7 @@ def add_to_anki(word, data, target_deck):
             "Notes": data["notes"],
         },
         "options": {"allowDuplicate": False, "duplicateScope": "deck"},
-        "tags": ["recognition"] if data["is_literary"] else [],
+        "tags": ["recognition"] if target_deck == RECOGNITION_DECK else [],
     }
     try:
         note_id = invoke("addNote", note=note)
@@ -214,14 +214,17 @@ def generate_card(vocab_word):
             return user_input
         return original_value
 
-    def calculate_target_deck(is_chengyu, is_literary):
-        if is_chengyu:
-            return IDIOM_DECK
-        elif is_literary:
-            return RECOGNITION_DECK
-        return PRODUCTION_DECK
+    if data["is_chengyu"]:
+        target_deck = IDIOM_DECK
+    elif data["is_literary"]:
+        target_deck = RECOGNITION_DECK
+    else:
+        target_deck = PRODUCTION_DECK
 
-    target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
+    decks = [PRODUCTION_DECK, RECOGNITION_DECK, IDIOM_DECK]
+    shorthand = {PRODUCTION_DECK.name: ["production", "prod"],
+                 RECOGNITION_DECK.name: ["recognition", "recog"],
+                 IDIOM_DECK.name: ["idioms", "idiom", "phrases", "phrase"]}
 
     while True:
         if display_menu:
@@ -233,11 +236,16 @@ def generate_card(vocab_word):
             print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
             if data["notes"] != "":
                 print(f"Notes: {data["notes"]}")
-            print(f"""0. Cancel
-1. Add to {target_deck}
-2. Toggle idiom or word
-3. Toggle literary and informal
-(Type 'm' for full menu)""")
+            print(f"0. Cancel\n1. Add to {target_deck}")
+            counter = 2
+            options = []
+            for deck in decks:
+                if deck == target_deck:
+                    continue
+                print(f"{counter}. Switch to {deck.name}")
+                options.append(deck)
+                counter += 1
+            print("(Type 'm' for full menu)")
         else:
             display_menu = True
         user_input = input("> ").strip().lower()
@@ -246,16 +254,10 @@ def generate_card(vocab_word):
         elif user_input == "1" or user_input == "add":
             add_to_anki(vocab_word, data, target_deck)
             return
-        elif user_input == "2" or user_input == "idiom" or user_input == "word":
-            data["is_chengyu"] = not data["is_chengyu"]
-            target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
-        elif user_input == "3" or user_input == "literary" or user_input == "informal":
-            if data["is_chengyu"]:
-                print("This shouldn't matter because the target vocab is an idiom.")
-                display_menu = False
-            else:
-                data["is_literary"] = not data["is_literary"]
-                target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
+        elif user_input == "2" or user_input in shorthand[options[0].name]:
+            target_deck = options[0]
+        elif user_input == "3" or user_input in shorthand[options[1].name]:
+            target_deck = options[1]
         elif user_input == "4":
             data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
         elif user_input == "5":
