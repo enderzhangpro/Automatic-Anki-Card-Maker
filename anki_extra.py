@@ -31,8 +31,6 @@ def wait_for_anki(timeout=30, interval=0.5):
 
 
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
-WORD_DECK = "Extra"
-IDIOM_DECK = "Idioms & Set Phrases"
 CHINESE_TO_ENGLISH = "CH → EN"
 ENGLISH_TO_CHINESE = "EN → CH"
 CYAN = '\033[36m'
@@ -43,8 +41,23 @@ GREEN = '\033[32m'
 RED = '\033[31m'
 BOLD = '\033[1m'
 RESET = '\033[0m'
-PRINT_WORD_DECK = f"{BOLD}{CYAN}{WORD_DECK + literary_or_spoken}{RESET}"
-PRINT_IDIOM_DECK = f"{BOLD}{RED}{IDIOM_DECK}{RESET}"
+
+
+class Deck:
+
+    def __init__(self, name, note_type, color):
+        self.name = name
+        self.note_type = note_type
+        self.color = color
+
+    def __str__(self):
+        return f"{BOLD}{self.color}{self.name}{RESET}"
+
+
+PRODUCTION_DECK = Deck("Production", ENGLISH_TO_CHINESE, CYAN)
+IDIOM_DECK = Deck("Idioms & Set Phrases", ENGLISH_TO_CHINESE, RED)
+RECOGNITION_DECK = Deck("Recognition", CHINESE_TO_ENGLISH, GREEN)
+
 
 """print(f"{BOLD}{CYAN}{WORD_DECK}{RESET}")
 print(f"{BOLD}{GREEN}{WORD_DECK}{RESET}")
@@ -75,15 +88,10 @@ def invoke(action, **params):
     return result["result"]
 
 
-def add_to_anki(word, data):
-    deck_name_color = PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK
-    if data["is_literary"] and not data["is_chengyu"]:
-        model_name = CHINESE_TO_ENGLISH
-    else:
-        model_name = ENGLISH_TO_CHINESE
+def add_to_anki(word, data, target_deck):
     note = {
-        "deckName": IDIOM_DECK if data["is_chengyu"] else WORD_DECK,
-        "modelName": model_name,
+        "deckName": target_deck.name,
+        "modelName": target_deck.note_type,
         "fields": {
             "Simplified": word,
             "Traditional": "",
@@ -114,9 +122,9 @@ def add_to_anki(word, data):
         print("Error: Anki is closed.")
         sys.exit(0)
     except RuntimeError:
-        print(f'"{word}" already exists in {deck_name_color} — skipped.')
+        print(f'"{word}" already exists in {target_deck} — skipped.')
         return
-    print(f"Added '{word}' as note {note_id} to {deck_name_color}.")
+    print(f"Added '{word}' as note {note_id} to {target_deck}.")
     return note_id
 
 
@@ -198,7 +206,6 @@ def generate_card(vocab_word):
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
     data["original_is_literary"] = data["is_literary"]
-
     display_menu = True
 
     def replace_except_on_escape(original_value, prompt):
@@ -207,15 +214,19 @@ def generate_card(vocab_word):
             return user_input
         return original_value
 
-    # print(json.dumps(data, indent=2, ensure_ascii=False))
+    def calculate_target_deck(is_chengyu, is_literary):
+        if is_chengyu:
+            return IDIOM_DECK
+        elif is_literary:
+            return RECOGNITION_DECK
+        return PRODUCTION_DECK
+
+    target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
 
     while True:
         if display_menu:
-            print(f"Deck: {PRINT_IDIOM_DECK if data['is_chengyu'] else PRINT_WORD_DECK}")
-            if data["is_literary"] and not data['is_chengyu']:
-                print(f"Word: {BOLD}{GREEN}{vocab_word} (literary){RESET}")
-            else:
-                print(f"Word: {vocab_word}")
+            print(f"Deck: {target_deck}")
+            print(f"Word: {vocab_word}")
             print(f"Meaning: {data["meaning_english"]}")
             print(f"Part of Speech: {data["part_of_speech_english"]}")
             print(f"Example Sentence: {data["sentencesimplified"]}")
@@ -223,9 +234,9 @@ def generate_card(vocab_word):
             if data["notes"] != "":
                 print(f"Notes: {data["notes"]}")
             print(f"""0. Cancel
-1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}
-2. Switch Deck
-3. Swap literary and informal
+1. Add to {target_deck}
+2. Toggle idiom or word
+3. Toggle literary and informal
 (Type 'm' for full menu)""")
         else:
             display_menu = True
@@ -233,12 +244,19 @@ def generate_card(vocab_word):
         if user_input == "0" or user_input == "exit" or user_input == "cancel":
             return
         elif user_input == "1" or user_input == "add":
-            add_to_anki(vocab_word, data)
+            add_to_anki(vocab_word, data, target_deck)
             return
-        elif user_input == "2" or user_input == "swap" or user_input == "switch":
+        elif user_input == "2" or user_input == "idiom" or user_input == "word":
             data["is_chengyu"] = not data["is_chengyu"]
+            target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
         elif user_input == "3" or user_input == "literary" or user_input == "informal":
-            data["is_literary"] = not data["is_literary"]
+            if data["is_chengyu"]:
+                print("This shouldn't matter because the target vocab is an idiom.")
+                display_menu = False
+            else:
+                data["is_literary"] = not data["is_literary"]
+                target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
+            target_deck = calculate_target_deck(data["is_chengyu"], data["is_literary"])
         elif user_input == "4":
             data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
         elif user_input == "5":
