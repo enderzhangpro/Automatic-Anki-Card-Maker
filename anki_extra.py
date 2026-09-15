@@ -31,11 +31,10 @@ def wait_for_anki(timeout=30, interval=0.5):
 
 
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
-literary_or_spoken = ""
 WORD_DECK = "Extra"
 IDIOM_DECK = "Idioms & Set Phrases"
-CHINESE_TO_ENGLISH = "HSK+ (extra)"
-ENGLISH_TO_CHINESE = "HSK+ Idioms"
+CHINESE_TO_ENGLISH = "CH → EN"
+ENGLISH_TO_CHINESE = "EN → CH"
 CYAN = '\033[36m'
 GREEN = '\033[32m'
 # YELLOW = '\033[33m'
@@ -155,10 +154,9 @@ def generate_card(vocab_word):
                     'content': f'For the Mandarin word "{vocab_word}", provide: '
                     f'(1) whether this is a chengyu, '
                     f'(2) whether this word is primarily encountered in written/literary Chinese rather than spoken aloud in everyday conversation, '
-                    f'(3) why this word should be classified as literary or spoken'
-                    f'(4) part of speech — written in English, '
-                    f'(5) an example sentence in simplified Chinese, '
-                    f'(6) the English translation of that example sentence.',
+                    f'(3) part of speech — written in English, '
+                    f'(4) an example sentence in simplified Chinese, '
+                    f'(5) the English translation of that example sentence.',
                 },
             ],
             # Pass the Pydantic schema into the format argument
@@ -185,11 +183,10 @@ def generate_card(vocab_word):
                     'content': f'For the Mandarin word "{vocab_word}", provide: '
                     f'(1) whether this is a chengyu, '
                     f'(2) whether this word is primarily encountered in written/literary Chinese rather than spoken aloud in everyday conversation, '
-                    f'(3) why this word should be classified as literary or spoken'
-                    f'(4) meaning — written in English, '
-                    f'(5) part of speech — written in English, '
-                    f'(6) an example sentence in simplified Chinese, '
-                    f'(7) the English translation of that example sentence.',
+                    f'(3) meaning — written in English, '
+                    f'(4) part of speech — written in English, '
+                    f'(5) an example sentence in simplified Chinese, '
+                    f'(6) the English translation of that example sentence.',
                 },
             ],
             format=ExtraNote.model_json_schema(),
@@ -230,7 +227,7 @@ def generate_card(vocab_word):
             print(f"""0. Cancel
 1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}
 2. Switch Deck
-3. Literary
+3. Swap literary and informal
 (Type 'm' for full menu)""")
         else:
             display_menu = True
