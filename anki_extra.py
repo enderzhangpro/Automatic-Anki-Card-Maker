@@ -222,8 +222,6 @@ def generate_card(vocab_word):
             print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
             if data["notes"] != "":
                 print(f"Notes: {data["notes"]}")
-            # menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Edit part of speech\n5. Regenerate example sentence\n6. Type in example sentence manually"
-            # menu = f"\n0. Cancel\n1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}\n2. Switch Deck\n3. Edit English meaning\n4. Regenerate example sentence\n5. Type in example sentence manually\n6. Type in notes"
             print(f"""0. Cancel
 1. Add to {PRINT_IDIOM_DECK if data["is_chengyu"] else PRINT_WORD_DECK}
 2. Switch Deck
@@ -285,8 +283,8 @@ def generate_card(vocab_word):
 
                         },
                     ],
-                    options={'temperature': 0},  # Low temperature ensures strict format adherence
-                    think=False,  # turn off extended reasoning
+                    options={'temperature': 0},
+                    think=False,
                 )
                 data["sentencemeaning_english"] = response.message.content
             elif english_translation.lower() == "/q":
@@ -329,7 +327,7 @@ if __name__ == "__main__":
             else:
                 print("Anki executable not found at the specified path.")
                 sys.exit(1)
-        cedict = CcCedict()
+        cedict = CcCedict()  # must initialize dictionary before use
         for i in range(1, len(sys.argv)):
             if len(sys.argv) > 2:
                 print(f"====={i} of {len(sys.argv) - 1}=====")
