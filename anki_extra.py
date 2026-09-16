@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from collections import Counter
 import json
 from ollama import chat
 import os
@@ -88,6 +89,32 @@ def invoke(action, **params):
     return result["result"]
 
 
+def has_exact_quantities(sub_str, target_str):
+    c1 = Counter(sub_str)
+    c2 = Counter(target_str)
+    # Check if every character count in sub_str is less than or equal to target_str
+    return all(c2[char] >= count for char, count in c1.items())
+
+
+def make_cloze_sentence(sentence, target_vocab):
+    if not has_exact_quantities(target_vocab, sentence):
+        return None
+    output_sentence = ""
+    i = 0
+    j = sentence.index(target_vocab[0])
+
+    while True:
+        output_sentence += sentence[i:j] + "[ ]"
+        k = j + len(target_vocab)
+        slice_to_test = sentence[j:k]
+        while not has_exact_quantities(target_vocab, sentence[j:k]) and k < len(sentence):
+            k += 1
+        i = k
+        j = sentence.find(target_vocab[0], i)
+        if j == -1:
+            return output_sentence + sentence[i:]
+
+
 def add_to_anki(word, data, target_deck):
     note = {
         "deckName": target_deck.name,
@@ -104,7 +131,7 @@ def add_to_anki(word, data, target_deck):
             "Homograph": "",
             "SentenceSimplified": data["sentencesimplified"],
             "SentenceTraditional": "",
-            "SentenceSimplifiedCloze": "",
+            "SentenceSimplifiedCloze": data["sentencesimplifiedcloze"],
             "SentenceTraditionalCloze": "",
             "SentencePinyin.1": to_pinyin(data["sentencesimplified"]),
             "SentencePinyin.2": "",
@@ -206,6 +233,9 @@ def generate_card(vocab_word):
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
     data["original_is_literary"] = data["is_literary"]
+    data["sentencesimplifiedcloze"] = make_cloze_sentence(data["sentencesimplified"], vocab_word)
+    if data["sentencesimplifiedcloze"] is None:
+        print(f"{RED}Error: '{vocab_word}' not found in its entirely in AI-generated example sentence.{RESET}")
     display_menu = True
 
     def replace_except_on_escape(original_value, prompt):
@@ -233,6 +263,7 @@ def generate_card(vocab_word):
             print(f"Meaning: {data["meaning_english"]}")
             print(f"Part of Speech: {data["part_of_speech_english"]}")
             print(f"Example Sentence: {data["sentencesimplified"]}")
+            print(f"Example Sentence w/ Cloze: {data["sentencesimplifiedcloze"]}")
             print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
             if data["notes"] != "":
                 print(f"Notes: {data["notes"]}")
