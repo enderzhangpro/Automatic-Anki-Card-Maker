@@ -81,6 +81,13 @@ def is_chinese(text):
     return all('\u4e00' <= char <= '\u9fff' for char in text)
 
 
+def print_warning(text, text_color=RED, bolded=False):
+    if not bolded:
+        print(f"{text_color}{text}{RESET}")
+    else:
+        print(f"{text_color}{BOLD}{text}{RESET}")
+
+
 def invoke(action, **params):
     payload = {"action": action, "version": 6, "params": params}
     resp = requests.post(ANKI_CONNECT_URL, json=payload, timeout=10)
@@ -116,11 +123,13 @@ def make_cloze_sentence(sentence, target_vocab):
             return output_sentence + sentence[i:]
 
 
-def call_cloze(sentence, target_vocab):
+def call_cloze(sentence, target_vocab, suppress_print=False):
     output = make_cloze_sentence(sentence, target_vocab)
     if output is not None:
         return output
-    return f"{RED}Error: '{vocab_word}' not found in its entirely in AI-generated example sentence.{RESET}"
+    if not suppress_print:
+        print_warning(f"Error: '{vocab_word}' not found in its entirely in AI-generated example sentence.")
+    return sentence
 
 
 def add_to_anki(word, data, target_deck):
@@ -217,7 +226,7 @@ def generate_card(vocab_word):
             if i < len(cleared_definitions) - 1:
                 data["meaning_english"] += "; "
     else:
-        print(f"{RED}Warning: '{vocab_word}' not found in Chinese-English CC-CEDICT dictionary. Reverting to LLM definition...{RESET}")
+        print_warning(f"Warning: '{vocab_word}' not found in Chinese-English CC-CEDICT dictionary. Reverting to LLM definition...")
         response = chat(
             model='qwen3.5:4b',
             messages=[
@@ -269,7 +278,11 @@ def generate_card(vocab_word):
             print(f"Meaning: {data["meaning_english"]}")
             print(f"Part of Speech: {data["part_of_speech_english"]}")
             print(f"Example Sentence: {data["sentencesimplified"]}")
-            print(f"Example Sentence w/ Cloze: {data["sentencesimplifiedcloze"]}")
+            print(f"Example Sentence w/ Cloze: ", end="")
+            if '[ ]' not in data["sentencesimplifiedcloze"]:
+                print_warning(data["sentencesimplifiedcloze"], bolded=True)
+            else:
+                print(data["sentencesimplifiedcloze"])
             print(f"Sentence Meaning: {data["sentencemeaning_english"]}")
             if data["notes"] != "":
                 print(f"Notes: {data["notes"]}")
@@ -359,7 +372,10 @@ def generate_card(vocab_word):
             print(to_pinyin(data["sentencesimplified"]))
             display_menu = False
         elif user_input == "10" or user_input == "cloze":
-            data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new cloze sentence: ")
+            print("Note: replace cloze sections with '[ ]'")
+            data["sentencesimplifiedcloze"] = replace_except_on_escape(data["sentencesimplifiedcloze"], "Type in new cloze sentence: ")
+            if '[ ]' not in data["sentencesimplifiedcloze"]:
+                print_warning(f"Warning: your submitted sentence does not contain any cloze deletions.")
         elif user_input == "m" or user_input == "menu":
             print(f"""4. Edit English meaning
 5. Edit part of speech
@@ -367,7 +383,7 @@ def generate_card(vocab_word):
 7. Type in example sentence manually
 8. Type in notes
 9. Show pinyin
-10. Edit cloze sentence""")
+10. Type in cloze sentence""")
             display_menu = False
         else:
             print(f"'{user_input}' is not a valid command. Please look at the menu for help.")
