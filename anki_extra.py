@@ -34,6 +34,7 @@ def wait_for_anki(timeout=30, interval=0.5):
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 CHINESE_TO_ENGLISH = "CH → EN"
 ENGLISH_TO_CHINESE = "EN → CH"
+ENGLISH_TO_CHINESE_CLOZE = "EN → CH (cloze)"
 CYAN = '\033[36m'
 GREEN = '\033[32m'
 # YELLOW = '\033[33m'
@@ -55,8 +56,8 @@ class Deck:
         return f"{BOLD}{self.color}{self.name}{RESET}"
 
 
-PRODUCTION_DECK = Deck("Production", ENGLISH_TO_CHINESE, CYAN)
-IDIOM_DECK = Deck("Idioms & Set Phrases", ENGLISH_TO_CHINESE, RED)
+PRODUCTION_DECK = Deck("Production", ENGLISH_TO_CHINESE_CLOZE, CYAN)
+IDIOM_DECK = Deck("Idioms & Set Phrases", ENGLISH_TO_CHINESE_CLOZE, RED)
 RECOGNITION_DECK = Deck("Recognition", CHINESE_TO_ENGLISH, GREEN)
 
 
@@ -113,6 +114,13 @@ def make_cloze_sentence(sentence, target_vocab):
         j = sentence.find(target_vocab[0], i)
         if j == -1:
             return output_sentence + sentence[i:]
+
+
+def call_cloze(sentence, target_vocab):
+    output = make_cloze_sentence(sentence, target_vocab)
+    if output is not None:
+        return output
+    return f"{RED}Error: '{vocab_word}' not found in its entirely in AI-generated example sentence.{RESET}"
 
 
 def add_to_anki(word, data, target_deck):
@@ -233,9 +241,7 @@ def generate_card(vocab_word):
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
     data["original_is_literary"] = data["is_literary"]
-    data["sentencesimplifiedcloze"] = make_cloze_sentence(data["sentencesimplified"], vocab_word)
-    if data["sentencesimplifiedcloze"] is None:
-        print(f"{RED}Error: '{vocab_word}' not found in its entirely in AI-generated example sentence.{RESET}")
+    data["sentencesimplifiedcloze"] = call_cloze(data["sentencesimplified"], vocab_word)
     display_menu = True
 
     def replace_except_on_escape(original_value, prompt):
@@ -289,11 +295,11 @@ def generate_card(vocab_word):
             target_deck = options[0]
         elif user_input == "3" or user_input in shorthand[options[1].name]:
             target_deck = options[1]
-        elif user_input == "4":
+        elif user_input == "4" or user_input == "define" or user_input == "meaning":
             data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
         elif user_input == "5":
             data["part_of_speech_english"] = replace_except_on_escape(data["part_of_speech_english"], "Type in new part of speech: ")
-        elif user_input == "6":
+        elif user_input == "6" or user_input == "generate" or user_input == "regenerate" or user_input == "gen" or user_input == "regen":
             response = chat(
                 model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
                 messages=[
@@ -312,8 +318,9 @@ def generate_card(vocab_word):
             )
             new_example = json.loads(response.message.content)
             data["sentencesimplified"] = new_example["sentencesimplified"]
+            data["sentencesimplifiedcloze"] = call_cloze(data["sentencesimplified"], vocab_word)
             data["sentencemeaning_english"] = new_example["sentencemeaning_english"]
-        elif user_input == "7" or user_input == "generate" or user_input == "regenerate" or user_input == "gen" or user_input == "regen":
+        elif user_input == "7" or user_input == "manual":
             new_sentence = input("Type in new example sentence: ").strip()
             if new_sentence.lower() == "/q":
                 continue
@@ -341,6 +348,7 @@ def generate_card(vocab_word):
                 continue
             else:
                 data["sentencemeaning_english"] = english_translation
+            data["sentencesimplifiedcloze"] = call_cloze(new_sentence, vocab_word)
             data["sentencesimplified"] = new_sentence
         elif user_input == "8" or user_input == "notes" or user_input == "note":
             data["notes"] = replace_except_on_escape(data["notes"], "Type in notes: ")
@@ -350,13 +358,16 @@ def generate_card(vocab_word):
             print(f"Example Sentence: {data["sentencesimplified"]}")
             print(to_pinyin(data["sentencesimplified"]))
             display_menu = False
+        elif user_input == "10" or user_input == "cloze":
+            data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new cloze sentence: ")
         elif user_input == "m" or user_input == "menu":
             print(f"""4. Edit English meaning
 5. Edit part of speech
 6. Generate new example sentence
 7. Type in example sentence manually
 8. Type in notes
-9. Show pinyin""")
+9. Show pinyin
+10. Edit cloze sentence""")
             display_menu = False
         else:
             print(f"'{user_input}' is not a valid command. Please look at the menu for help.")
