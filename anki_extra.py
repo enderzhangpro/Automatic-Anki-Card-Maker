@@ -278,7 +278,7 @@ def generate_card(vocab_word):
             print(f"Meaning: {data["meaning_english"]}")
             print(f"Part of Speech: {data["part_of_speech_english"]}")
             print(f"Example Sentence: {data["sentencesimplified"]}")
-            print(f"Example Sentence w/ Cloze: ", end="")
+            print(f"Cloze Example Sentence: ", end="")
             if '[ ]' not in data["sentencesimplifiedcloze"]:
                 print_warning(data["sentencesimplifiedcloze"], bolded=True)
             else:
