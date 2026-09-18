@@ -104,27 +104,27 @@ def has_exact_quantities(sub_str, target_str):
     return all(c2[char] >= count for char, count in c1.items())
 
 
-def make_cloze_sentence(sentence, target_vocab):
-    if not has_exact_quantities(target_vocab, sentence):
+def make_cloze_sentence(sentence, vocab_word):
+    if not has_exact_quantities(vocab_word, sentence):
         return None
     output_sentence = ""
     i = 0
-    j = sentence.index(target_vocab[0])
+    j = sentence.index(vocab_word[0])
 
     while True:
         output_sentence += sentence[i:j] + "[ ]"
-        k = j + len(target_vocab)
+        k = j + len(vocab_word)
         slice_to_test = sentence[j:k]
-        while not has_exact_quantities(target_vocab, sentence[j:k]) and k < len(sentence):
+        while not has_exact_quantities(vocab_word, sentence[j:k]) and k < len(sentence):
             k += 1
         i = k
-        j = sentence.find(target_vocab[0], i)
+        j = sentence.find(vocab_word[0], i)
         if j == -1:
             return output_sentence + sentence[i:]
 
 
-def call_cloze(sentence, target_vocab, suppress_print=False):
-    output = make_cloze_sentence(sentence, target_vocab)
+def call_cloze(sentence, vocab_word, suppress_print=False):
+    output = make_cloze_sentence(sentence, vocab_word)
     if output is not None:
         return output
     if not suppress_print:
