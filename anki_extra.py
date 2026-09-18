@@ -97,14 +97,14 @@ def invoke(action, **params):
     return result["result"]
 
 
-def has_exact_quantities(sub_str, target_str):
+"""def has_exact_quantities(sub_str, target_str):
     c1 = Counter(sub_str)
     c2 = Counter(target_str)
     # Check if every character count in sub_str is less than or equal to target_str
-    return all(c2[char] >= count for char, count in c1.items())
+    return all(c2[char] >= count for char, count in c1.items())"""
 
 
-def make_cloze_sentence(sentence, vocab_word):
+"""def make_cloze_sentence(sentence, vocab_word):
     if not has_exact_quantities(vocab_word, sentence):
         return None
     output_sentence = ""
@@ -129,7 +129,7 @@ def call_cloze(sentence, vocab_word, suppress_print=False):
         return output
     if not suppress_print:
         print_warning(f"Error: '{vocab_word}' not found in its entirely in AI-generated example sentence.")
-    return sentence
+    return sentence"""
 
 
 def add_to_anki(word, data, target_deck):
@@ -250,7 +250,7 @@ def generate_card(vocab_word):
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
     data["original_is_literary"] = data["is_literary"]
-    data["sentencesimplifiedcloze"] = call_cloze(data["sentencesimplified"], vocab_word)
+    data["sentencesimplifiedcloze"] = data["sentencesimplified"].replace(vocab_word, "[ ]")
     display_menu = True
 
     def replace_except_on_escape(original_value, prompt):
@@ -331,7 +331,7 @@ def generate_card(vocab_word):
             )
             new_example = json.loads(response.message.content)
             data["sentencesimplified"] = new_example["sentencesimplified"]
-            data["sentencesimplifiedcloze"] = call_cloze(data["sentencesimplified"], vocab_word)
+            data["sentencesimplifiedcloze"] = data["sentencesimplified"].replace(vocab_word, "[ ]")
             data["sentencemeaning_english"] = new_example["sentencemeaning_english"]
         elif user_input == "7" or user_input == "manual":
             new_sentence = input("Type in new example sentence: ").strip()
@@ -361,7 +361,7 @@ def generate_card(vocab_word):
                 continue
             else:
                 data["sentencemeaning_english"] = english_translation
-            data["sentencesimplifiedcloze"] = call_cloze(new_sentence, vocab_word)
+            data["sentencesimplifiedcloze"] = new_sentence.replace(vocab_word, "[ ]")
             data["sentencesimplified"] = new_sentence
         elif user_input == "8" or user_input == "notes" or user_input == "note":
             data["notes"] = replace_except_on_escape(data["notes"], "Type in notes: ")
