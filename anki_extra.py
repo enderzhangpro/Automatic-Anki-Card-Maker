@@ -56,8 +56,8 @@ class Deck:
         return f"{BOLD}{self.color}{self.name}{RESET}"
 
 
-PRODUCTION_DECK = Deck("Production", ENGLISH_TO_CHINESE_CLOZE, CYAN)
-IDIOM_DECK = Deck("Idioms & Set Phrases", ENGLISH_TO_CHINESE_CLOZE, RED)
+PRODUCTION_DECK = Deck("Production", CHINESE_TO_ENGLISH, CYAN)
+IDIOM_DECK = Deck("Idioms & Set Phrases", ENGLISH_TO_CHINESE, RED)
 RECOGNITION_DECK = Deck("Recognition", CHINESE_TO_ENGLISH, GREEN)
 
 
@@ -157,7 +157,7 @@ def add_to_anki(word, data, target_deck):
             "SentenceImage": "",
             "Notes": data["notes"],
         },
-        "options": {"allowDuplicate": False, "duplicateScope": "deck"},
+        "options": {"allowDuplicate": False, "duplicateScope": "collection"},
         "tags": ["recognition"] if target_deck == RECOGNITION_DECK else [],
     }
     try:
