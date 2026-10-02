@@ -371,19 +371,18 @@ def generate_card(vocab_word):
             print(f"Example Sentence: {data["sentencesimplified"]}")
             print(to_pinyin(data["sentencesimplified"]))
             display_menu = False
-        elif user_input == "10" or user_input == "cloze":
+        """elif user_input == "10" or user_input == "cloze":
             print("Note: replace cloze sections with '[ ]'")
             data["sentencesimplifiedcloze"] = replace_except_on_escape(data["sentencesimplifiedcloze"], "Type in new cloze sentence: ")
             if '[ ]' not in data["sentencesimplifiedcloze"]:
-                print_warning(f"Warning: your submitted sentence does not contain any cloze deletions.")
+                print_warning(f"Warning: your submitted sentence does not contain any cloze deletions.")"""
         elif user_input == "m" or user_input == "menu":
             print(f"""4. Edit English meaning
 5. Edit part of speech
 6. Generate new example sentence
 7. Type in example sentence manually
 8. Type in notes
-9. Show pinyin
-10. Type in cloze sentence""")
+9. Show pinyin""")
             display_menu = False
         else:
             print(f"'{user_input}' is not a valid command. Please look at the menu for help.")
