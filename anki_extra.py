@@ -390,4 +390,4 @@ if __name__ == "__main__":
         else:
             print("Which word do you want to add into Anki?")
     except KeyboardInterrupt:
-        print("\nIn a rush, aren't you? Well, goodbye.")
+        pass
