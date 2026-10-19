@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from collections import Counter
 import json
 from ollama import chat
 import os
@@ -47,18 +46,20 @@ RESET = '\033[0m'
 
 class Deck:
 
-    def __init__(self, name, note_type, color):
+    def __init__(self, name, str_name, note_type, color):
         self.name = name
+        self.str_name = str_name
         self.note_type = note_type
         self.color = color
 
     def __str__(self):
-        return f"{BOLD}{self.color}{self.name}{RESET}"
+        return f"{BOLD}{self.color}{self.str_name}{RESET}"
 
 
-PRODUCTION_DECK = Deck("Production", CHINESE_TO_ENGLISH, CYAN)
-IDIOM_DECK = Deck("Idioms & Set Phrases", ENGLISH_TO_CHINESE, RED)
-RECOGNITION_DECK = Deck("Recognition", CHINESE_TO_ENGLISH, GREEN)
+SUPER_DECK = "Chinese Vocab"
+PRODUCTION_DECK = Deck(f"{SUPER_DECK}::Production", "Production", CHINESE_TO_ENGLISH, CYAN)
+IDIOM_DECK = Deck("Idioms & Set Phrases", "Idioms & Set Phrases", ENGLISH_TO_CHINESE, RED)
+RECOGNITION_DECK = Deck(f"{SUPER_DECK}::Recognition", "Recognition", CHINESE_TO_ENGLISH, GREEN)
 
 
 """print(f"{BOLD}{CYAN}{WORD_DECK}{RESET}")
@@ -97,41 +98,6 @@ def invoke(action, **params):
     return result["result"]
 
 
-"""def has_exact_quantities(sub_str, target_str):
-    c1 = Counter(sub_str)
-    c2 = Counter(target_str)
-    # Check if every character count in sub_str is less than or equal to target_str
-    return all(c2[char] >= count for char, count in c1.items())"""
-
-
-"""def make_cloze_sentence(sentence, vocab_word):
-    if not has_exact_quantities(vocab_word, sentence):
-        return None
-    output_sentence = ""
-    i = 0
-    j = sentence.index(vocab_word[0])
-
-    while True:
-        output_sentence += sentence[i:j] + "[ ]"
-        k = j + len(vocab_word)
-        slice_to_test = sentence[j:k]
-        while not has_exact_quantities(vocab_word, sentence[j:k]) and k < len(sentence):
-            k += 1
-        i = k
-        j = sentence.find(vocab_word[0], i)
-        if j == -1:
-            return output_sentence + sentence[i:]
-
-
-def call_cloze(sentence, vocab_word, suppress_print=False):
-    output = make_cloze_sentence(sentence, vocab_word)
-    if output is not None:
-        return output
-    if not suppress_print:
-        print_warning(f"Error: '{vocab_word}' not found in its entirely in AI-generated example sentence.")
-    return sentence"""
-
-
 def add_to_anki(word, data, target_deck):
     note = {
         "deckName": target_deck.name,
@@ -165,8 +131,13 @@ def add_to_anki(word, data, target_deck):
     except requests.exceptions.ConnectionError:
         print("Error: Anki is closed.")
         sys.exit(0)
-    except RuntimeError:
-        print(f'"{word}" already exists in {target_deck} — skipped.')
+    except RuntimeError as e:
+        if e.args[0][:20] == "deck was not found: ":
+            print(f"The deck {target_deck} was not found in your collection.")
+        elif e.args[0] == "cannot create note because it is a duplicate":
+            print(f'"{word}" already exists in {target_deck} — skipped.')
+        else:
+            print(e)
         return
     print(f"Added '{word}' as note {note_id} to {target_deck}.")
     return note_id
@@ -267,9 +238,9 @@ def generate_card(vocab_word):
         target_deck = PRODUCTION_DECK
 
     decks = [PRODUCTION_DECK, RECOGNITION_DECK, IDIOM_DECK]
-    shorthand = {PRODUCTION_DECK.name: ["production", "prod"],
-                 RECOGNITION_DECK.name: ["recognition", "recog"],
-                 IDIOM_DECK.name: ["idioms", "idiom", "phrases", "phrase"]}
+    shorthand = {PRODUCTION_DECK.str_name: ["production", "prod"],
+                 RECOGNITION_DECK.str_name: ["recognition", "recog"],
+                 IDIOM_DECK.str_name: ["idioms", "idiom", "phrases", "phrase"]}
 
     while True:
         if display_menu:
@@ -292,7 +263,7 @@ def generate_card(vocab_word):
             for deck in decks:
                 if deck == target_deck:
                     continue
-                print(f"{counter}. Switch to {deck.name}")
+                print(f"{counter}. Switch to {deck.str_name}")
                 options.append(deck)
                 counter += 1
             print("(Type 'm' for full menu)")
@@ -304,9 +275,9 @@ def generate_card(vocab_word):
         elif user_input == "1" or user_input == "add":
             add_to_anki(vocab_word, data, target_deck)
             return
-        elif user_input == "2" or user_input in shorthand[options[0].name]:
+        elif user_input == "2" or user_input in shorthand[options[0].str_name]:
             target_deck = options[0]
-        elif user_input == "3" or user_input in shorthand[options[1].name]:
+        elif user_input == "3" or user_input in shorthand[options[1].str_name]:
             target_deck = options[1]
         elif user_input == "4" or user_input == "define" or user_input == "meaning":
             data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
@@ -371,11 +342,6 @@ def generate_card(vocab_word):
             print(f"Example Sentence: {data["sentencesimplified"]}")
             print(to_pinyin(data["sentencesimplified"]))
             display_menu = False
-        """elif user_input == "10" or user_input == "cloze":
-            print("Note: replace cloze sections with '[ ]'")
-            data["sentencesimplifiedcloze"] = replace_except_on_escape(data["sentencesimplifiedcloze"], "Type in new cloze sentence: ")
-            if '[ ]' not in data["sentencesimplifiedcloze"]:
-                print_warning(f"Warning: your submitted sentence does not contain any cloze deletions.")"""
         elif user_input == "m" or user_input == "menu":
             print(f"""4. Edit English meaning
 5. Edit part of speech
