@@ -355,10 +355,8 @@ def generate_card(vocab_word):
         elif user_input == "8" or user_input == "notes" or user_input == "note":
             data["notes"] = replace_except_on_escape(data["notes"], "Type in notes: ")
         elif user_input == "9" or user_input == "pinyin":
-            print(f"Word: {vocab_word}")
-            print(to_pinyin(vocab_word))
-            print(f"Example Sentence: {data["sentencesimplified"]}")
-            print(to_pinyin(data["sentencesimplified"]))
+            print(f"Word: {to_pinyin(vocab_word)}")
+            print(f"Example Sentence: {to_pinyin(data["sentencesimplified"])}")
             display_menu = False
         elif user_input == "m" or user_input == "menu":
             print(f"""4. Edit English meaning
