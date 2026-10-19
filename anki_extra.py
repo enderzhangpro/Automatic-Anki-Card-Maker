@@ -142,7 +142,7 @@ def add_to_anki(word, data, target_deck):
             "Notes": data["notes"],
         },
         "options": {"allowDuplicate": False, "duplicateScope": "collection"},
-        "tags": ["recognition", "machine_generated"] if target_deck == RECOGNITION_DECK else ["machine_generated"],
+        "tags": ["recognition", "ai_generated"] if target_deck == RECOGNITION_DECK else ["ai_generated"],
     }
     try:
         note_id = invoke("addNote", note=note)
@@ -239,7 +239,6 @@ def generate_card(vocab_word):
         data = json.loads(raw_content)
     data["part_of_speech_english"] = data["part_of_speech_english"].lower()  # because I prefer lowercase
     data["notes"] = ""
-    data["original_is_literary"] = data["is_literary"]
     data["sentencesimplifiedcloze"] = data["sentencesimplified"].replace(vocab_word, "[ ]")
     display_menu = True
 
