@@ -30,6 +30,19 @@ def wait_for_anki(timeout=30, interval=0.5):
     return False
 
 
+def open_anki():
+    if not anki_is_running():
+        if os.path.exists(anki_path) or anki_path == "anki":
+            launch_cmd = ['open', '-g', anki_path] if anki_path != "anki" else ['anki']
+            subprocess.Popen(launch_cmd)
+            if not wait_for_anki():
+                print("Timed out waiting for Anki to start.")
+                sys.exit(1)
+        else:
+            print("Anki executable not found at the specified path.")
+            sys.exit(1)
+
+
 ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 CHINESE_TO_ENGLISH = "CH → EN"
 ENGLISH_TO_CHINESE = "EN → CH"
@@ -129,13 +142,14 @@ def add_to_anki(word, data, target_deck):
             "Notes": data["notes"],
         },
         "options": {"allowDuplicate": False, "duplicateScope": "collection"},
-        "tags": ["recognition"] if target_deck == RECOGNITION_DECK else [],
+        "tags": ["recognition", "machine_generated"] if target_deck == RECOGNITION_DECK else ["machine_generated"],
     }
     try:
         note_id = invoke("addNote", note=note)
     except requests.exceptions.ConnectionError:
-        print("Error: Anki is closed.")
-        sys.exit(0)
+        print("Error: Anki is closed. Opening...")
+        open_anki()
+        note_id = invoke("addNote", note=note)
     except RuntimeError as e:
         if e.args[0][:20] == "deck was not found: ":
             print(f"The deck {target_deck} was not found in your collection.")
@@ -363,17 +377,7 @@ def generate_card(vocab_word):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         anki_path = "/Applications/Anki.app"
-
-        if not anki_is_running():
-            if os.path.exists(anki_path) or anki_path == "anki":
-                launch_cmd = ['open', '-g', anki_path] if anki_path != "anki" else ['anki']
-                subprocess.Popen(launch_cmd)
-                if not wait_for_anki():
-                    print("Timed out waiting for Anki to start.")
-                    sys.exit(1)
-            else:
-                print("Anki executable not found at the specified path.")
-                sys.exit(1)
+        open_anki()
         cedict = CcCedict()  # must initialize dictionary before use
         for i in range(1, len(sys.argv)):
             if len(sys.argv) > 2:
