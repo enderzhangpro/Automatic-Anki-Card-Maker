@@ -46,20 +46,25 @@ RESET = '\033[0m'
 
 class Deck:
 
-    def __init__(self, name, str_name, note_type, color):
+    def __init__(self, name, note_type, color, parent=None):
         self.name = name
-        self.str_name = str_name
         self.note_type = note_type
         self.color = color
+        self.parent = parent
+
+    def get_name(self):
+        if self.parent is None:
+            return self.name
+        return f"{self.parent}::{self.name}"
 
     def __str__(self):
-        return f"{BOLD}{self.color}{self.str_name}{RESET}"
+        return f"{BOLD}{self.color}{self.name}{RESET}"
 
 
-SUPER_DECK = "Chinese Vocab"
-PRODUCTION_DECK = Deck(f"{SUPER_DECK}::Production", "Production", CHINESE_TO_ENGLISH, CYAN)
-IDIOM_DECK = Deck("Idioms & Set Phrases", "Idioms & Set Phrases", ENGLISH_TO_CHINESE, RED)
-RECOGNITION_DECK = Deck(f"{SUPER_DECK}::Recognition", "Recognition", CHINESE_TO_ENGLISH, GREEN)
+PARENT_DECK = "Chinese Vocab"
+PRODUCTION_DECK = Deck("Production", CHINESE_TO_ENGLISH, CYAN, PARENT_DECK)
+IDIOM_DECK = Deck("Idioms & Set Phrases", ENGLISH_TO_CHINESE, RED)
+RECOGNITION_DECK = Deck("Recognition", CHINESE_TO_ENGLISH, GREEN, PARENT_DECK)
 
 
 """print(f"{BOLD}{CYAN}{WORD_DECK}{RESET}")
@@ -100,7 +105,7 @@ def invoke(action, **params):
 
 def add_to_anki(word, data, target_deck):
     note = {
-        "deckName": target_deck.name,
+        "deckName": target_deck.get_name(),
         "modelName": target_deck.note_type,
         "fields": {
             "Simplified": word,
@@ -238,9 +243,9 @@ def generate_card(vocab_word):
         target_deck = PRODUCTION_DECK
 
     decks = [PRODUCTION_DECK, RECOGNITION_DECK, IDIOM_DECK]
-    shorthand = {PRODUCTION_DECK.str_name: ["production", "prod"],
-                 RECOGNITION_DECK.str_name: ["recognition", "recog"],
-                 IDIOM_DECK.str_name: ["idioms", "idiom", "phrases", "phrase"]}
+    shorthand = {PRODUCTION_DECK.name: ["production", "prod"],
+                 RECOGNITION_DECK.name: ["recognition", "recog"],
+                 IDIOM_DECK.name: ["idioms", "idiom", "phrases", "phrase"]}
 
     while True:
         if display_menu:
@@ -263,7 +268,7 @@ def generate_card(vocab_word):
             for deck in decks:
                 if deck == target_deck:
                     continue
-                print(f"{counter}. Switch to {deck.str_name}")
+                print(f"{counter}. Switch to {deck.name}")
                 options.append(deck)
                 counter += 1
             print("(Type 'm' for full menu)")
@@ -275,9 +280,9 @@ def generate_card(vocab_word):
         elif user_input == "1" or user_input == "add":
             add_to_anki(vocab_word, data, target_deck)
             return
-        elif user_input == "2" or user_input in shorthand[options[0].str_name]:
+        elif user_input == "2" or user_input in shorthand[options[0].name]:
             target_deck = options[0]
-        elif user_input == "3" or user_input in shorthand[options[1].str_name]:
+        elif user_input == "3" or user_input in shorthand[options[1].name]:
             target_deck = options[1]
         elif user_input == "4" or user_input == "define" or user_input == "meaning":
             data["meaning_english"] = replace_except_on_escape(data["meaning_english"], "Type in new meaning: ")
