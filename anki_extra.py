@@ -359,6 +359,9 @@ def generate_card(vocab_word):
             print(f"Example Sentence: {to_pinyin(data["sentencesimplified"])}")
             display_menu = False
         elif user_input == "m" or user_input == "menu":
+            # erase the past two lines for an uninterrupted view of the menu
+            print("\033[1A\x1b[2K", end="")
+            print("\033[1A\x1b[2K", end="")
             print(f"""4. Edit English meaning
 5. Edit part of speech
 6. Generate new example sentence
@@ -372,16 +375,19 @@ def generate_card(vocab_word):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        anki_path = "/Applications/Anki.app"
-        open_anki()
-        cedict = CcCedict()  # must initialize dictionary before use
-        for i in range(1, len(sys.argv)):
-            if len(sys.argv) > 2:
-                print(f"====={i} of {len(sys.argv) - 1}=====")
-            if is_chinese(sys.argv[i]):
-                generate_card(sys.argv[i])
-            else:
-                print(f'"{sys.argv[i]}" is not Mandarin Chinese. Skipping...')
-    else:
-        print("Which word do you want to add into Anki?")
+    try:
+        if len(sys.argv) > 1:
+            anki_path = "/Applications/Anki.app"
+            open_anki()
+            cedict = CcCedict()  # must initialize dictionary before use
+            for i in range(1, len(sys.argv)):
+                if len(sys.argv) > 2:
+                    print(f"====={i} of {len(sys.argv) - 1}=====")
+                if is_chinese(sys.argv[i]):
+                    generate_card(sys.argv[i])
+                else:
+                    print(f'"{sys.argv[i]}" is not Mandarin Chinese. Skipping...')
+        else:
+            print("Which word do you want to add into Anki?")
+    except KeyboardInterrupt:
+        print("\nIn a rush, aren't you? Well, goodbye.")
