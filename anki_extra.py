@@ -147,7 +147,7 @@ def add_to_anki(word, data, target_deck):
     try:
         note_id = invoke("addNote", note=note)
     except requests.exceptions.ConnectionError:
-        print("Error: Anki is closed. Opening...")
+        print("Error: Anki is closed. Reopening...")
         open_anki()
         note_id = invoke("addNote", note=note)
     except RuntimeError as e:
@@ -310,6 +310,7 @@ def generate_card(vocab_word):
                         'content': f'For the Mandarin word "{vocab_word}", provide: '
                         f'(1) an example sentence in simplified Chinese, '
                         f'(2) the English translation of that example sentence.'
+                        f'(3) make sure it is not too long or complicated.'
                         f'Make sure it is meaningfully different from the last one: "{data["sentencesimplified"]}", as the user has rejected that one.'
                     },
                 ],
