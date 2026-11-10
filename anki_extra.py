@@ -145,18 +145,20 @@ def add_to_anki(word, data, target_deck):
         "tags": ["recognition", "ai_generated"] if target_deck == RECOGNITION_DECK else ["ai_generated"],
     }
     try:
-        note_id = invoke("addNote", note=note)
-    except requests.exceptions.ConnectionError:
-        print("Error: Anki is closed. Reopening...")
-        open_anki()
-        note_id = invoke("addNote", note=note)
+        try:
+            note_id = invoke("addNote", note=note)
+        except requests.exceptions.ConnectionError:
+            print("Error: Anki is closed. Reopening...")
+            open_anki()
+            note_id = invoke("addNote", note=note)
     except RuntimeError as e:
-        if e.args[0][:20] == "deck was not found: ":
+        msg = str(e)
+        if msg.startswith("deck was not found"):
             print(f"The deck {target_deck} was not found in your collection.")
-        elif e.args[0] == "cannot create note because it is a duplicate":
-            print(f'"{word}" already exists in {target_deck} — skipped.')
+        elif msg == "cannot create note because it is a duplicate":
+            print(f'"{word}" already exists in your collection — skipped.')
         else:
-            print(e)
+            print(msg)
         return
     print(f"Added '{word}' as note {note_id} to {target_deck}.")
     return note_id
