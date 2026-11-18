@@ -25,13 +25,18 @@ if __name__ == "__main__":
                     print(f"Traditional: {dictionary_entry['traditional']}")
                 print(f"Pinyin: {dictionary_entry['pinyin']}")
                 print(f"Definitions: ", end="")
-                cleared_definitions = [d for d in dictionary_entry['definitions'] if not d.startswith("CL:")]
+                """cleared_definitions = [d for d in dictionary_entry['definitions'] if not d.startswith("CL:")]
                 for i in range(len(cleared_definitions)):
                     print(cleared_definitions[i], end="")
                     if i < len(cleared_definitions) - 1:
                         print("; ", end="")
                 if i < len(sys.argv[1:]):
-                    print()
+                    print()"""
+                for i in range(len(dictionary_entry['definitions'])):
+                    print(dictionary_entry['definitions'][i], end="")
+                    if i < len(dictionary_entry['definitions']) - 1:
+                        print("; ", end="")
+                print()
             else:
                 print(f"'{word}' not found in Chinese-English CC-CEDICT dictionary. Skipping...")
     else:

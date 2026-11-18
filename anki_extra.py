@@ -353,7 +353,11 @@ def generate_card(vocab_word):
                 continue
             else:
                 data["sentencemeaning_english"] = english_translation
-            data["sentencesimplifiedcloze"] = new_sentence.replace(vocab_word, "[ ]")
+            print(new_sentence)
+            print(vocab_word)
+            print(new_sentence.replace(vocab_word, "[ ]"))
+            data["sentencesimplified"] = new_sentence
+            data["sentencesimplifiedcloze"] = data["sentencesimplified"].replace(vocab_word, "[ ]")
             data["sentencesimplified"] = new_sentence
         elif user_input == "8" or user_input == "notes" or user_input == "note":
             data["notes"] = replace_except_on_escape(data["notes"], "Type in notes: ")
