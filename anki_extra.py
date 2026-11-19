@@ -319,10 +319,9 @@ def generate_card(vocab_word):
                         {
                             'role': 'user',
                             'content': f'For the Mandarin word "{vocab_word}", provide: '
-                            f'(1) an example sentence in simplified Chinese, '
+                            f'(1) an example sentence in simplified Chinese, following this prompt: {user_suggestion}'
                             f'(2) the English translation of that example sentence.'
                             f'(3) make sure it is not too long or complicated.'
-                            f'(4) User desires the following kind of example sentence: {user_suggestion}'
                         },
                     ],
                     # Pass the Pydantic schema into the format argument
