@@ -250,6 +250,10 @@ def generate_card(vocab_word):
             return user_input
         return original_value
 
+    if len(vocab_word) < 3:
+        print_warning("Caught false positive for is_chengyu.", bolded=True)
+        data["is_chengyu"] = False
+
     if data["is_chengyu"]:
         target_deck = IDIOM_DECK
     elif data["is_literary"]:
