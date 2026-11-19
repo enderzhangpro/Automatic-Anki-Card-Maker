@@ -250,7 +250,7 @@ def generate_card(vocab_word):
             return user_input
         return original_value
 
-    if len(vocab_word) < 3:
+    if len(vocab_word) < 3 and data["is_chengyu"]:
         print_warning("Caught false positive for is_chengyu.", bolded=True)
         data["is_chengyu"] = False
 
