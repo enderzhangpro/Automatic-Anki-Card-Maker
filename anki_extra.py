@@ -308,23 +308,46 @@ def generate_card(vocab_word):
         elif user_input == "5":
             data["part_of_speech_english"] = replace_except_on_escape(data["part_of_speech_english"], "Type in new part of speech: ")
         elif user_input == "6" or user_input == "generate" or user_input == "regenerate" or user_input == "gen" or user_input == "regen":
-            response = chat(
-                model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
-                messages=[
-                    {
-                        'role': 'user',
-                        'content': f'For the Mandarin word "{vocab_word}", provide: '
-                        f'(1) an example sentence in simplified Chinese, '
-                        f'(2) the English translation of that example sentence.'
-                        f'(3) make sure it is not too long or complicated.'
-                        f'Make sure it is meaningfully different from the last one: "{data["sentencesimplified"]}", as the user has rejected that one.'
-                    },
-                ],
-                # Pass the Pydantic schema into the format argument
-                format=RegenerateExampleSentence.model_json_schema(),
-                options={'temperature': 0},  # Low temperature ensures strict format adherence
-                think=False,  # turn off extended reasoning
-            )
+            print("(Hint: you can type an empty prompt for no suggestion)")
+            user_suggestion = input("Type in example sentence prompt: ").strip()
+            if user_suggestion.lower() == "/q":
+                continue
+            elif user_suggestion != "":
+                response = chat(
+                    model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
+                    messages=[
+                        {
+                            'role': 'user',
+                            'content': f'For the Mandarin word "{vocab_word}", provide: '
+                            f'(1) an example sentence in simplified Chinese, '
+                            f'(2) the English translation of that example sentence.'
+                            f'(3) make sure it is not too long or complicated.'
+                            f'(4) User desires the following kind of example sentence: {user_suggestion}'
+                        },
+                    ],
+                    # Pass the Pydantic schema into the format argument
+                    format=RegenerateExampleSentence.model_json_schema(),
+                    options={'temperature': 0},  # Low temperature ensures strict format adherence
+                    think=False,  # turn off extended reasoning
+                )
+            else:
+                response = chat(
+                    model='qwen3.5:4b',  # Ensure you use a model that supports structured JSON
+                    messages=[
+                        {
+                            'role': 'user',
+                            'content': f'For the Mandarin word "{vocab_word}", provide: '
+                            f'(1) an example sentence in simplified Chinese, '
+                            f'(2) the English translation of that example sentence.'
+                            f'(3) make sure it is not too long or complicated.'
+                            f'(4) Make sure it is meaningfully different from the last one: "{data["sentencesimplified"]}", as the user has rejected that one.'
+                        },
+                    ],
+                    # Pass the Pydantic schema into the format argument
+                    format=RegenerateExampleSentence.model_json_schema(),
+                    options={'temperature': 0},  # Low temperature ensures strict format adherence
+                    think=False,  # turn off extended reasoning
+                )
             new_example = json.loads(response.message.content)
             data["sentencesimplified"] = new_example["sentencesimplified"]
             data["sentencesimplifiedcloze"] = data["sentencesimplified"].replace(vocab_word, "[ ]")
@@ -333,7 +356,7 @@ def generate_card(vocab_word):
             new_sentence = input("Type in new example sentence: ").strip()
             if new_sentence.lower() == "/q":
                 continue
-            print("(Note: you can type /t for a machine translation)")
+            print("(Hint: you can type /t for a machine translation)")
             english_translation = input("Type in the English translation: ").strip()
             if english_translation.lower() == "/t":
                 response = chat(
