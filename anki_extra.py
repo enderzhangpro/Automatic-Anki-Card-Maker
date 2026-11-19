@@ -424,3 +424,5 @@ if __name__ == "__main__":
             print("Which word do you want to add into Anki?")
     except KeyboardInterrupt:
         pass
+    except ConnectionError:
+        print("Failed to connect to Ollama. Is it open?")
