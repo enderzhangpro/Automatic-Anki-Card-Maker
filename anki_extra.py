@@ -339,7 +339,7 @@ def generate_card(vocab_word):
                             f'(1) an example sentence in simplified Chinese, '
                             f'(2) the English translation of that example sentence.'
                             f'(3) make sure it is not too long or complicated.'
-                            f'(4) Make sure it is meaningfully different from the last one: "{data["sentencesimplified"]}", as the user has rejected that one.'
+                            f'(4) make sure it is meaningfully different from the last one: "{data["sentencesimplified"]}", as the user has rejected that one.'
                         },
                     ],
                     # Pass the Pydantic schema into the format argument
